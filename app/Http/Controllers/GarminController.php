@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RunningActivity;
+use App\Services\GarminService;
 use Carbon\Carbon;
 
 class GarminController
@@ -34,7 +35,7 @@ class GarminController
     public function index()
     {
 
-//        (new GarminService())->saveRunningActivities();
+        (new GarminService())->saveRunningActivities();
 
         $daysOfRunning = ['Tuesday', 'Thursday', 'Saturday'];
 

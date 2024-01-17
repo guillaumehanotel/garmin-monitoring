@@ -13,11 +13,11 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
     </head>
-    <body class="antialiased">
+    <body class="antialiased ml-6">
 
         <!-- Statistiques Hebdomadaires -->
         <div class="weekly-stats">
-            <h2>Statistiques Hebdomadaires</h2>
+            <h2 class="font-bold">Statistiques Hebdomadaires</h2>
             <p>Km courus : {{ $weeklyStats['totalDistance'] }} km</p>
             <p>Minutes courues : {{ $weeklyStats['totalDuration'] }} minutes</p>
             <p>Nombre de séances : {{ $weeklyStats['sessionCount'] }}</p>
@@ -30,7 +30,7 @@
 
         <!-- Statistiques Mensuelles -->
         <div class="monthly-stats">
-            <h2>Statistiques Mensuelles</h2>
+            <h2 class="font-bold">Statistiques Mensuelles</h2>
             <p>Km courus : {{ $monthlyStats['totalDistance'] }} km</p>
             <p>Minutes courues : {{ $monthlyStats['totalDuration'] }} minutes</p>
             <p>Nombre de séances : {{ $monthlyStats['sessionCount'] }}</p>
@@ -41,7 +41,7 @@
 
         <!-- Statistiques Annuelles -->
         <div class="annual-stats">
-            <h2>Statistiques Annuelles</h2>
+            <h2 class="font-bold">Statistiques Annuelles</h2>
             <p>Km courus : {{ $annualStats['totalDistance'] }} km</p>
             <p>Minutes courues : {{ $annualStats['totalDuration'] }} minutes</p>
             <p>Nombre de séances : {{ $annualStats['sessionCount'] }}</p>
@@ -55,7 +55,7 @@
             @if ($sessionsDelta > 0)
                 <p>Vous êtes en avance de {{ $sessionsDelta }} séances.</p>
             @elseif ($sessionsDelta < 0)
-                <p>Vous avez un retard de {{ abs($sessionsDelta) }} séances.</p>
+                <p class="text-red-800">Vous avez un retard de {{ abs($sessionsDelta) }} séances.</p>
             @else
                 <p>Vous êtes exactement sur votre objectif.</p>
             @endif
