@@ -95,7 +95,7 @@ services:
         networks:
             - garmin_laravel
     npm:
-        image: node:15.0
+        image: node:19.6
         container_name: garmin_npm
         volumes:
             - ./:/var/www/html
