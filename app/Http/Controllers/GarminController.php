@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RunningActivity;
 use App\Services\GarminService;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class GarminController
 {
@@ -34,8 +35,7 @@ class GarminController
      */
     public function index()
     {
-
-        (new GarminService())->saveRunningActivities();
+        $newActivities = (new GarminService())->saveRunningActivities();
 
         $daysOfRunning = ['Tuesday', 'Thursday', 'Saturday'];
 
@@ -69,7 +69,57 @@ class GarminController
         // Retard ou avance
         $sessionsDelta = $annualStats['sessionCount'] - $expectedSessions;
 
-        return view('welcome', [
+        // liste des courses que je veux faire dans l'année
+        $events = [
+            [
+                'name' => '10 KM DES QUAIS DE BORDEAUX',
+                'date' => '03/11/2024',
+                'url' => 'https://10kmdesquaisdebordeaux.fr/'
+            ],
+            [
+                'name' => 'SEMI-MARATHON DE BORDEAUX',
+                'date' => '01/12/2024',
+                'url' => 'https://www.semidebordeaux.fr/'
+            ]
+        ];
+
+        foreach ($events as $key => $event) {
+            // Parse the event date using Carbon
+            $eventDate = Carbon::createFromFormat('d/m/Y', $event['date']);
+
+            $daysCountdown = Carbon::now()->diffInDays($eventDate, false);
+
+            // Calculate the total difference in days
+            $totalDays = Carbon::now()->diffInDays($eventDate, false);
+
+            // Calculate weeks and remaining days
+            $weeks = intdiv($totalDays, 7);
+            $daysAfterWeeks = $totalDays % 7;
+
+            // Calculate months and remaining days
+            $months = Carbon::now()->diffInMonths($eventDate, false);
+            $daysAfterMonths = Carbon::now()->addMonths($months)->diffInDays($eventDate, false);
+
+            $events[$key]['countdown_days'] = $daysCountdown;
+            $events[$key]['countdown_weeks'] = $weeks . ' semaines et ' . $daysAfterWeeks . ' jours';
+            $events[$key]['countdown_months'] = $months . ' mois et ' . $daysAfterMonths . ' jours';
+        }
+
+        $year = $today->format('Y');
+
+        $month = Str::ucfirst($today->translatedFormat('F'));
+
+        $weekNumber = $today->format('W');
+        $formattedWeek = Str::ucfirst("semaine n°$weekNumber");
+
+         $todayFormatted = $today->translatedFormat('d F Y');
+
+        return view('garmin', [
+            'events' => $events,
+            'todayFormatted' => $todayFormatted,
+            'year' => $year,
+            'month' => $month,
+            'formattedWeek' => $formattedWeek,
             'weeklyStats' => $weeklyStats,
             'monthlyStats' => $monthlyStats,
             'annualStats' => $annualStats,

@@ -3,35 +3,58 @@
 namespace App\Services;
 
 use App\Models\RunningActivity;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class GarminService
 {
 
-    public function saveRunningActivities(): void
+    public function saveRunningActivities(): Collection
     {
-        $activities = $this->retrieveGarminActivities();
+        $newActivities = collect();
 
-        foreach ($activities as $activity) {
-            RunningActivity::updateOrCreate(
-                ['activity_id' => $activity['activity_id']], // Clé pour chercher
-                [
-                    'name' => $activity['name'],
-                    'start_time_local' => $activity['start_time_local'],
-                    'start_time_gmt' => $activity['start_time_gmt'],
-                    'distance_km' => $activity['distance_km'],
-                    'duration_minutes' => $activity['duration_minutes'],
-                    'average_pace_min_per_km' => $activity['average_pace_min_per_km'],
-                    'average_heart_rate_bpm' => $activity['average_heart_rate_bpm'],
-                    'max_heart_rate_bpm' => $activity['max_heart_rate_bpm'],
-                    'average_running_cadence_steps_per_min' => $activity['average_running_cadence_steps_per_min'],
-                    'max_running_cadence_steps_per_min' => $activity['max_running_cadence_steps_per_min'],
-                    'location' => $activity['location'],
-                ]
-            );
+        if ($this->isNewActivityAvailable()) {
+            $activities = $this->retrieveGarminActivities();
+            foreach ($activities as $activity) {
+                $savedActivity = RunningActivity::updateOrCreate(
+                    ['activity_id' => $activity['activity_id']], // Clé pour chercher
+                    [
+                        'name' => $activity['name'],
+                        'start_time_local' => $activity['start_time_local'],
+                        'start_time_gmt' => $activity['start_time_gmt'],
+                        'distance_km' => $activity['distance_km'],
+                        'duration_minutes' => $activity['duration_minutes'],
+                        'average_pace_min_per_km' => $activity['average_pace_min_per_km'],
+                        'average_heart_rate_bpm' => $activity['average_heart_rate_bpm'],
+                        'max_heart_rate_bpm' => $activity['max_heart_rate_bpm'],
+                        'average_running_cadence_steps_per_min' => $activity['average_running_cadence_steps_per_min'],
+                        'max_running_cadence_steps_per_min' => $activity['max_running_cadence_steps_per_min'],
+                        'location' => $activity['location'],
+                    ]
+                );
+                $newActivities->push($savedActivity);
+            }
         }
+        return $newActivities;
+    }
+
+    private function isNewActivityAvailable(): bool
+    {
+        $lastActivityTime = DB::table('running_activities')
+            ->latest('start_time_local')
+            ->value('start_time_local');
+
+        if (!$lastActivityTime) {
+            return true;
+        }
+
+        $lastActivityTime = Carbon::parse($lastActivityTime);
+        $currentTime = Carbon::now();
+
+        return $currentTime->diffInHours($lastActivityTime) > 24;
     }
 
     /**
