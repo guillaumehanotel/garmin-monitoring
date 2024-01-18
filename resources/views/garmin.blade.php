@@ -16,7 +16,7 @@
     <body class="antialiased ml-6 bg-gray-300 p-4">
 
     <!-- Retard ou avance -->
-    <div class="p-4 shadow-lg mb-4 rounded w-1/3 flex flex-col items-center text-center
+    <div class="p-4 shadow-lg mb-4 rounded w-full sm:w-1/3 flex flex-col items-center text-center
             @if ($sessionsDelta > 0)
                 bg-green-100
             @elseif ($sessionsDelta < 0)
@@ -52,7 +52,7 @@
     </div>
 
         <!-- Statistiques Hebdomadaires -->
-        <div class="weekly-stats p-4 shadow-lg mb-4 rounded bg-white w-1/3 flex flex-col items-center text-center">
+        <div class="weekly-stats p-4 shadow-lg mb-4 rounded bg-white w-full sm:w-1/3 flex flex-col items-center text-center">
             <h2 class="font-bold text-xl mb-4">{{ $formattedWeek }}</h2>
             <div class="flex justify-evenly w-full mb-4">
                 <div class="stat">
@@ -73,7 +73,7 @@
 
 
         <!-- Statistiques Mensuelles -->
-        <div class="monthly-stats p-4 shadow-lg mb-4 rounded bg-white w-1/3 flex flex-col items-center text-center">
+        <div class="monthly-stats p-4 shadow-lg mb-4 rounded bg-white w-full sm:w-1/3 flex flex-col items-center text-center">
             <h2 class="font-bold text-xl mb-4">{{ $month }} {{ $year }}</h2>
             <div class="flex justify-evenly w-full mb-4">
                 <div class="stat">
@@ -94,7 +94,7 @@
 
 
         <!-- Statistiques Annuelles -->
-        <div class="annual-stats p-4 shadow-lg mb-4 rounded bg-white w-1/3 flex flex-col items-center text-center">
+        <div class="annual-stats p-4 shadow-lg mb-4 rounded bg-white w-full sm:w-1/3 flex flex-col items-center text-center">
             <h2 class="font-bold text-xl mb-4">{{ $year }}</h2>
             <div class="flex justify-evenly w-full mb-4">
                 <div class="stat">
@@ -113,7 +113,7 @@
             </div>
         </div>
 
-        <div class="events-container p-4 shadow-lg mb-4 rounded bg-white w-1/3">
+        <div class="events-container p-4 shadow-lg mb-4 rounded bg-white w-full sm:w-1/3">
             <h2 class="font-bold text-xl mb-4">Événements à venir</h2>
             @foreach ($events as $event)
                 <div class="event mb-4 p-3 rounded bg-gray-100">
