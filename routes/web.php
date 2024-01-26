@@ -14,4 +14,5 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [GarminController::class, 'index']);
+Route::get('/', [GarminController::class, 'index'])->name('garmin.index');
+Route::get('/refresh', [GarminController::class, 'refresh'])->name('garmin.refresh');

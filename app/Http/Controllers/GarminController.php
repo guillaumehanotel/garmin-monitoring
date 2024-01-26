@@ -3,12 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\RunningActivity;
+use App\Observers\ProtimingCrawlObserver;
 use App\Services\GarminService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Spatie\Crawler\Crawler;
 
 class GarminController
 {
+
+    private GarminService $garminService;
+
+    public function __construct()
+    {
+        $this->garminService = new GarminService();
+    }
 
     /**
      * Le but du projet : faire un tableau de bord avec mes activités de running pour m'aider à tenir mes objectifs 2024
@@ -35,7 +44,14 @@ class GarminController
      */
     public function index()
     {
-        $newActivities = (new GarminService())->saveRunningActivities();
+
+//        Crawler::create()
+//            ->setCrawlObserver(new ProtimingCrawlObserver())
+//            ->startCrawling("https://protiming.fr/Results/runningR/6690/857");
+//
+//        dd("ok");
+
+        $newActivities = $this->garminService->saveRunningActivities();
 
         $daysOfRunning = ['Tuesday', 'Thursday', 'Saturday'];
 
@@ -65,6 +81,10 @@ class GarminController
 
         // Nombre de séances attendues depuis le début de l'année
         $expectedSessions = $this->calculateExpectedSessions($today);
+
+        $weeklyStats['progress'] = $weeklyGoal > 0 ? min(($weeklyStats['sessionCount'] / $weeklyGoal) * 100, 100) : 0;
+        $monthlyStats['progress'] = $monthlyGoal > 0 ? min(($monthlyStats['sessionCount'] / $monthlyGoal) * 100, 100) : 0;
+        $annualStats['progress'] = $annualGoal > 0 ? min(($annualStats['sessionCount'] / $annualGoal) * 100, 100) : 0;
 
         // Retard ou avance
         $sessionsDelta = $annualStats['sessionCount'] - $expectedSessions;
@@ -112,7 +132,7 @@ class GarminController
         $weekNumber = $today->format('W');
         $formattedWeek = Str::ucfirst("semaine n°$weekNumber");
 
-         $todayFormatted = $today->translatedFormat('d F Y');
+        $todayFormatted = $today->translatedFormat('d F Y');
 
         return view('garmin', [
             'events' => $events,
@@ -128,6 +148,12 @@ class GarminController
             'monthlyGoal' => $monthlyGoal,
             'annualGoal' => $annualGoal,
         ]);
+    }
+
+    public function refresh()
+    {
+        $newActivities = $this->garminService->saveRunningActivities(true);
+        return redirect()->route('garmin.index');
     }
 
     private function countSpecificDaysInPeriod($start, $end, $daysOfWeek)

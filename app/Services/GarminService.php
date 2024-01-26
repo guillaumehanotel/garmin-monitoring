@@ -12,11 +12,11 @@ use Symfony\Component\Process\Process;
 class GarminService
 {
 
-    public function saveRunningActivities(): Collection
+    public function saveRunningActivities($forceRefresh = false): Collection
     {
         $newActivities = collect();
 
-        if ($this->isNewActivityAvailable()) {
+        if ($forceRefresh || $this->isNewActivityAvailable()) {
             $activities = $this->retrieveGarminActivities();
             foreach ($activities as $activity) {
                 $savedActivity = RunningActivity::updateOrCreate(

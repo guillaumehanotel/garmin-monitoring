@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Garmin Tracker</title>
 
         @vite('resources/css/app.css')
 
@@ -14,6 +14,11 @@
 
     </head>
     <body class="antialiased ml-6 bg-gray-300 p-4">
+
+    <a href="{{ route('garmin.refresh') }}"
+       class="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium mb-4 leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">
+        Rafraîchir
+    </a>
 
     <!-- Retard ou avance -->
     <div class="p-4 shadow-lg mb-4 rounded w-full sm:w-1/3 flex flex-col items-center text-center
@@ -49,6 +54,7 @@
         @else
             <p class="text-blue-800 font-bold">À jour</p>
         @endif
+
     </div>
 
         <!-- Statistiques Hebdomadaires -->
@@ -66,8 +72,13 @@
                     <span class="text-sm text-gray-600">Sorties</span>
                 </div>
             </div>
-            <div class="progress-bar bg-gray-200 w-full h-4 rounded overflow-hidden">
-                <div class="bg-blue-500 h-4 rounded" style="width: {{ $weeklyGoal > 0 ? min(($weeklyStats['sessionCount'] / $weeklyGoal) * 100, 100) : 0 }}%"></div>
+            <div class="relative w-full h-4 bg-gray-200 rounded overflow-hidden">
+                <div class="bg-blue-500 h-4 rounded" style="width: {{ $weeklyStats['progress']}}%"></div>
+
+                <!-- Ajout des traits pour chaque palier -->
+                @for ($i = 1; $i < $weeklyGoal; $i++)
+                    <div class="absolute h-4 border-r-2 border-black" style="left: {{ ($i / $weeklyGoal) * 100 }}%"></div>
+                @endfor
             </div>
         </div>
 
@@ -88,7 +99,7 @@
                 </div>
             </div>
             <div class="progress-bar bg-gray-200 w-full h-4 rounded overflow-hidden">
-                <div class="bg-blue-500 h-4 rounded" style="width: {{ $monthlyGoal > 0 ? min(($monthlyStats['sessionCount'] / $monthlyGoal) * 100, 100) : 0 }}%"></div>
+                <div class="bg-blue-500 h-4 rounded" style="width: {{ $monthlyStats['progress'] }}%"></div>
             </div>
         </div>
 
@@ -109,7 +120,7 @@
                 </div>
             </div>
             <div class="progress-bar bg-gray-200 w-full h-4 rounded overflow-hidden">
-                <div class="bg-blue-500 h-4 rounded" style="width: {{ $annualGoal > 0 ? min(($annualStats['sessionCount'] / $annualGoal) * 100, 100) : 0 }}%"></div>
+                <div class="bg-blue-500 h-4 rounded" style="width: {{ $annualStats['progress'] }}%"></div>
             </div>
         </div>
 
@@ -127,9 +138,6 @@
                 </div>
             @endforeach
         </div>
-
-
-
 
     </body>
 
