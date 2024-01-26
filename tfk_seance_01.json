@@ -1,0 +1,125 @@
+{
+  "echauffement": {
+    "description": "Échauffement des articulations + cardio",
+    "exercices": [
+      {
+        "nom": "Jumping Jacks",
+        "repetitions": 40
+      },
+      {
+        "nom": "Squats",
+        "repetitions": 15
+      }
+    ]
+  },
+  "corps_de_seance": [
+    {
+      "nom": "Mini Circuit 1",
+      "exercices": [
+        {
+          "nom": "Thruster",
+          "series": 4,
+          "repetitions": [8, 6],
+          "charge": "8-10kg par bras + PDC",
+          "recuperation": "1:45",
+          "remarque": "Enchaîner les 2 exos sans temps de repos"
+        },
+        {
+          "nom": "Squat Jump",
+          "series": 4,
+          "repetitions": [8, 6]
+        }
+      ]
+    },
+    {
+      "nom": "Mini Circuit 2",
+      "exercices": [
+        {
+          "nom": "Pompes",
+          "series": 4,
+          "repetitions": [12, 7],
+          "charge": "PDC",
+          "recuperation": "1:45",
+          "remarque": "Enchaîner les 2 exos sans temps de repos"
+        },
+        {
+          "nom": "Plank-to-push up",
+          "series": 4,
+          "repetitions": [12, 7]
+        }
+      ]
+    },
+    {
+      "nom": "Mini Circuit 3",
+      "exercices": [
+        {
+          "nom": "Bulgarian Split Squat",
+          "series": 4,
+          "repetitions": 9,
+          "charge": "8-10kg par bras + PDC",
+          "recuperation": "1:45",
+          "remarque": "Enchaîner les 2 exos sans temps de repos"
+        },
+        {
+          "nom": "Jumping Jack",
+          "series": 4,
+          "repetitions": 20
+        }
+      ]
+    },
+    {
+      "nom": "Mini Circuit 4",
+      "exercices": [
+        {
+          "nom": "Biceps Curl 2 bras",
+          "series": 3,
+          "repetitions": [6, 12],
+          "charge": "10-12kg par bras",
+          "recuperation": "1:45",
+          "remarque": "Enchaîner les 2 exos sans temps de repos"
+        },
+        {
+          "nom": "Rowing buste penché",
+          "series": 3,
+          "repetitions": [6, 12]
+        }
+      ]
+    },
+    {
+      "nom": "Mini Circuit 5",
+      "exercices": [
+        {
+          "nom": "Side Squat Jump",
+          "series": 4,
+          "repetitions": [10, 10],
+          "charge": "PDC",
+          "recuperation": "1:45",
+          "remarque": "Enchaîner les 2 exos sans temps de repos"
+        },
+        {
+          "nom": "Burpees",
+          "series": 4,
+          "repetitions": [10, 10]
+        }
+      ]
+    }
+  ],
+  "circuit_gainage_abs": {
+    "nom": "Circuit Gainage / Abs",
+    "exercices": [
+      {
+        "nom": "Planche",
+        "series": 4,
+        "repetitions": [30, 20],
+        "charge": "PDC",
+        "recuperation": "25",
+        "remarque": "Enchaîner les 2 exos sans temps de repos"
+      },
+      {
+        "nom": "Abs",
+        "series": 4,
+        "repetitions": [30, 20]
+      }
+    ]
+  }
+}
