@@ -3,54 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\RunningActivity;
-use App\Observers\ProtimingCrawlObserver;
 use App\Services\GarminService;
+use App\Services\ProtimingScrapService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
-use Spatie\Crawler\Crawler;
 
 class GarminController
 {
 
     private GarminService $garminService;
+    private ProtimingScrapService $protimingScrapService;
 
     public function __construct()
     {
         $this->garminService = new GarminService();
+        $this->protimingScrapService = new ProtimingScrapService();
     }
 
-    /**
-     * Le but du projet : faire un tableau de bord avec mes activités de running pour m'aider à tenir mes objectifs 2024
-     * J'ai pour objectif de courir 3 fois par semaine :
-     * - le mardi
-     * - le jeudi
-     * - le samedi
-     * Donc je voudrais 3 barres de progression :
-     * - hebdomadaire avec :
-     *  - le nombre de km courus
-     *  - le nombre de minutes courues
-     *  - le nombre de séances
-     * - mensuelle avec :
-     *  - le nombre de km courus
-     *  - le nombre de minutes courues
-     *  - le nombre de séances
-     * - annuelle avec :
-     *  - le nombre de km courus
-     *  - le nombre de minutes courues
-     *  - le nombre de séances
-     *
-     * Je voudrais donc avoir un nombre de séances de retard ou d'avance par rapport à mon objectif et au jour actuel de la semaine
-     *
-     */
     public function index()
     {
+//        $this->protimingScrapService->scrapAndSaveRaces();
+//        $this->protimingScrapService->scrapAndSaveRunnerRaces();
 
-//        Crawler::create()
-//            ->setCrawlObserver(new ProtimingCrawlObserver())
-//            ->startCrawling("https://protiming.fr/Results/runningR/6690/857");
-//
-//        dd("ok");
-
+        // Choper les races avec leurs nombres de résultats
         $newActivities = $this->garminService->saveRunningActivities();
 
         $daysOfRunning = ['Tuesday', 'Thursday', 'Saturday'];

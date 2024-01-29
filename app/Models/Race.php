@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Race extends Model
 {
-    protected $fillable = ['name', 'date', 'location'];
+    protected $fillable = ['name', 'type', 'date', 'location', 'url'];
 
     public function raceRunners(): HasMany
     {

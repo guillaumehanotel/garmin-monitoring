@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('race_id')->constrained()->onDelete('cascade');
             $table->foreignId('runner_id')->constrained()->onDelete('cascade');
+
             $table->integer('position');
-            $table->integer('bib_number');
-            $table->string('category');
+            $table->time('real_time'); // Temps réel
+            $table->integer('bib_number'); // Numéro de dossard
+            $table->string('category'); // SEM (1 / 2207)
             $table->float('speed_kmh', 8, 2);
-            $table->time('real_time');
-            $table->time('official_time');
+            $table->time('official_time'); // Temps officiel
+
+
             $table->time('time_km5')->nullable();
             $table->time('time_km10')->nullable();
             $table->time('time_km15')->nullable();
