@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Period;
 use App\Models\RunningActivity;
+use App\Services\EventService;
 use App\Services\GarminService;
 use App\Services\ProtimingScrapService;
 use Carbon\Carbon;
@@ -12,12 +14,35 @@ class GarminController
 {
 
     private GarminService $garminService;
+
+    private EventService $eventService;
     private ProtimingScrapService $protimingScrapService;
+
+    private array $dates;
+
+    private array $goalsPerPeriod;
+
+    const DAYS_OF_RUNNING = ['Tuesday', 'Thursday', 'Saturday'];
 
     public function __construct()
     {
         $this->garminService = new GarminService();
+        $this->eventService = new EventService();
         $this->protimingScrapService = new ProtimingScrapService();
+        $this->dates = [
+            'today' => now(),
+            'year' => now()->year,
+            'startOfWeek' => now()->startOfWeek(),
+            'startOfMonth' => now()->startOfMonth(),
+            'endOfMonth' => now()->endOfMonth(),
+            'startOfYear' => now()->startOfYear(),
+            'endOfYear' => now()->endOfYear(),
+        ];
+        $this->goalsPerPeriod = [
+            Period::WEEK->value => count(self::DAYS_OF_RUNNING),
+            Period::MONTH->value => $this->countSpecificDaysInPeriod(Period::MONTH),
+            Period::YEAR->value => $this->countSpecificDaysInPeriod(Period::YEAR),
+        ];
     }
 
     public function index()
@@ -28,100 +53,27 @@ class GarminController
         // Choper les races avec leurs nombres de résultats
         $newActivities = $this->garminService->saveRunningActivities();
 
-        $daysOfRunning = ['Tuesday', 'Thursday', 'Saturday'];
 
-        $today = now();
-        $startOfWeek = now()->startOfWeek();
-
-        $weeklyGoal = 3;
-
-        $startOfMonth = now()->startOfMonth();
-        $endOfMonth = now()->endOfMonth();
-
-        $monthlyGoal = $this->countSpecificDaysInPeriod($startOfMonth, $endOfMonth, $daysOfRunning);
-
-        $startOfYear = now()->startOfYear();
-        $endOfYear = now()->endOfYear();
-
-        $annualGoal = $this->countSpecificDaysInPeriod($startOfYear, $endOfYear, $daysOfRunning);
-
-        // Statistiques hebdomadaires
-        $weeklyStats = $this->calculateStats($startOfWeek, $today);
-
-        // Statistiques mensuelles
-        $monthlyStats = $this->calculateStats($startOfMonth, $today);
-
-        // Statistiques annuelles
-        $annualStats = $this->calculateStats($startOfYear, $today);
-
-        // Nombre de séances attendues depuis le début de l'année
-        $expectedSessions = $this->calculateExpectedSessions($today);
-
-        $weeklyStats['progress'] = $weeklyGoal > 0 ? min(($weeklyStats['sessionCount'] / $weeklyGoal) * 100, 100) : 0;
-        $monthlyStats['progress'] = $monthlyGoal > 0 ? min(($monthlyStats['sessionCount'] / $monthlyGoal) * 100, 100) : 0;
-        $annualStats['progress'] = $annualGoal > 0 ? min(($annualStats['sessionCount'] / $annualGoal) * 100, 100) : 0;
-
-        // Retard ou avance
-        $sessionsDelta = $annualStats['sessionCount'] - $expectedSessions;
-
-        // liste des courses que je veux faire dans l'année
-        $events = [
-            [
-                'name' => '10 KM DES QUAIS DE BORDEAUX',
-                'date' => '03/11/2024',
-                'url' => 'https://10kmdesquaisdebordeaux.fr/'
-            ],
-            [
-                'name' => 'SEMI-MARATHON DE BORDEAUX',
-                'date' => '01/12/2024',
-                'url' => 'https://www.semidebordeaux.fr/'
-            ]
+        $stats = [
+            Period::WEEK->value => $this->calculateStatsByPeriod(Period::WEEK),
+            Period::MONTH->value => $this->calculateStatsByPeriod(Period::MONTH),
+            Period::YEAR->value => $this->calculateStatsByPeriod(Period::YEAR),
         ];
 
-        foreach ($events as $key => $event) {
-            // Parse the event date using Carbon
-            $eventDate = Carbon::createFromFormat('d/m/Y', $event['date']);
+        $completedSessions = $stats[Period::YEAR->value]['sessionCount'];
+        $sessionsDeltaDetails = $this->getSessionDeltaDetails($completedSessions);
+        $events = $this->eventService->getEventsWithCountdown();
 
-            $daysCountdown = Carbon::now()->diffInDays($eventDate, false);
-
-            // Calculate the total difference in days
-            $totalDays = Carbon::now()->diffInDays($eventDate, false);
-
-            // Calculate weeks and remaining days
-            $weeks = intdiv($totalDays, 7);
-            $daysAfterWeeks = $totalDays % 7;
-
-            // Calculate months and remaining days
-            $months = Carbon::now()->diffInMonths($eventDate, false);
-            $daysAfterMonths = Carbon::now()->addMonths($months)->diffInDays($eventDate, false);
-
-            $events[$key]['countdown_days'] = $daysCountdown;
-            $events[$key]['countdown_weeks'] = $weeks . ' semaines et ' . $daysAfterWeeks . ' jours';
-            $events[$key]['countdown_months'] = $months . ' mois et ' . $daysAfterMonths . ' jours';
-        }
-
-        $year = $today->format('Y');
-
-        $month = Str::ucfirst($today->translatedFormat('F'));
-
-        $weekNumber = $today->format('W');
-        $formattedWeek = Str::ucfirst("semaine n°$weekNumber");
-
-        $todayFormatted = $today->translatedFormat('d F Y');
+        $eventsByDate = $this->getEventsByDate($events);
+        $runningActivities = $this->getActivitiesByDate();
+        $currentCalendar = $this->getCalendar($runningActivities, $eventsByDate);
 
         return view('garmin', [
             'events' => $events,
-            'todayFormatted' => $todayFormatted,
-            'year' => $year,
-            'month' => $month,
-            'formattedWeek' => $formattedWeek,
-            'weeklyStats' => $weeklyStats,
-            'monthlyStats' => $monthlyStats,
-            'annualStats' => $annualStats,
-            'sessionsDelta' => $sessionsDelta,
-            'weeklyGoal' => $weeklyGoal,
-            'monthlyGoal' => $monthlyGoal,
-            'annualGoal' => $annualGoal,
+            'todayFormatted' => $this->dates['today']->translatedFormat('d F Y'),
+            'stats' => $stats,
+            'sessionsDeltaDetails' => $sessionsDeltaDetails,
+            'calendarMonths' => $currentCalendar,
         ]);
     }
 
@@ -131,11 +83,113 @@ class GarminController
         return redirect()->route('garmin.index');
     }
 
-    private function countSpecificDaysInPeriod($start, $end, $daysOfWeek)
+    private function getEventsByDate(array $events): array
     {
+        $eventsByDate = [];
+
+        foreach ($events as $event) {
+            // Utilisation directe de la date de l'événement sans conversion Carbon
+            $date = Carbon::createFromFormat('d/m/Y', $event['date'])->format('Y-m-d');
+            $eventsByDate[$date][] = $event;
+        }
+
+        return $eventsByDate;
+    }
+
+    private function getActivitiesByDate(): array
+    {
+        $activities = RunningActivity::whereYear('start_time_local', '=', $this->dates['year'])->get();
+        $activitiesByDate = [];
+
+        foreach ($activities as $activity) {
+            $date = Carbon::parse($activity->start_time_local)->format('Y-m-d');
+            if (!isset($activitiesByDate[$date])) {
+                $activitiesByDate[$date] = [];
+            }
+            $activitiesByDate[$date][] = $activity;
+        }
+
+        return $activitiesByDate;
+    }
+
+
+    private function getCalendar(array $activitiesByDate, array $eventsByDate)
+    {
+        $year = $this->dates['year'];
+        $months = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $date = Carbon::createFromDate($year, $month, 1);
+            $daysInMonth = $date->daysInMonth;
+            $firstDayOfMonth = $date->dayOfWeek; // Carbon::SUNDAY = 0, Carbon::MONDAY = 1, ...
+
+            $monthDays = [];
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $monthDays[] = $day;
+            }
+
+            foreach ($monthDays as $index => $day) {
+                $formattedDate = Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+                $monthDays[$index] = [
+                    'day' => $day,
+                    'activities' => $activitiesByDate[$formattedDate] ?? null,
+                    'events' => $eventsByDate[$formattedDate] ?? [],
+                ];
+            }
+
+            $months[$month] = [
+                'name' => $date->locale('fr')->isoFormat('MMMM'),
+                'days' => $monthDays,
+                'firstDayOfWeek' => $firstDayOfMonth,
+                'daysInMonth' => $daysInMonth
+            ];
+        }
+        return $months;
+    }
+
+
+    private function getSessionDeltaDetails(int $completedSessions): array
+    {
+        // Nombre de séances attendues depuis le début de l'année
+        $expectedSessions = $this->calculateExpectedSessions($this->dates['today']);
+        // Retard ou avance
+        $sessionsDelta = $completedSessions - $expectedSessions;
+
+        if ($sessionsDelta > 0) {
+            $backgroundColorClass = 'bg-green-100';
+            $message = abs($sessionsDelta) . ' ' . (abs($sessionsDelta) === 1 ? 'séance' : 'Sorties') . ' d\'avance';
+            $textColorClass = 'text-green-800';
+        } elseif ($sessionsDelta < 0) {
+            $backgroundColorClass = 'bg-red-100';
+            $message = abs($sessionsDelta) . ' ' . (abs($sessionsDelta) === 1 ? 'séance' : 'Sorties') . ' de retard';
+            $textColorClass = 'text-red-800';
+        } else {
+            $backgroundColorClass = 'bg-blue-100';
+            $message = 'À jour';
+            $textColorClass = 'text-blue-800';
+        }
+
+        return [
+            'backgroundColorClass' => $backgroundColorClass,
+            'message' => $message,
+            'textColorClass' => $textColorClass,
+        ];
+    }
+
+
+    private function countSpecificDaysInPeriod(Period $period): int
+    {
+        $start = match($period) {
+            Period::MONTH => $this->dates['startOfMonth'],
+            Period::YEAR => $this->dates['startOfYear'],
+        };
+        $end = match($period) {
+            Period::MONTH => $this->dates['endOfMonth'],
+            Period::YEAR => $this->dates['endOfYear'],
+        };
         $count = 0;
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-            if (in_array($date->format('l'), $daysOfWeek)) {
+            if (in_array($date->format('l'), self::DAYS_OF_RUNNING)) {
                 $count++;
             }
         }
@@ -168,17 +222,35 @@ class GarminController
     }
 
 
-    private function calculateStats($startDate, $endDate): array
+    private function calculateStatsByPeriod(Period $period): array
     {
+        $startDate = match($period) {
+            Period::WEEK => $this->dates['startOfWeek'],
+            Period::MONTH => $this->dates['startOfMonth'],
+            Period::YEAR => $this->dates['startOfYear'],
+        };
+
+        $endDate = $this->dates['today'];
+
         $activities = RunningActivity::whereBetween('start_time_local', [$startDate, $endDate])->get();
 
         $totalDistance = $activities->sum('distance_km');
         $totalDuration = $activities->sum('duration_minutes');
         $sessionCount = $activities->count();
 
-        // Autres calculs si nécessaire
+        $goal = $this->goalsPerPeriod[$period->value];
+        $progress = $goal > 0 ? min(($sessionCount / $goal) * 100, 100) : 0;
 
-        return compact('totalDistance', 'totalDuration', 'sessionCount');
+        $year = $this->dates['year'];
+
+        $label = match($period) {
+            Period::WEEK => Str::ucfirst("semaine n°" . $this->dates['today']->format('W')),
+            Period::MONTH => Str::ucfirst($this->dates['today']->translatedFormat('F')) . ' ' . $year,
+            Period::YEAR => $year,
+        };
+
+        return compact('totalDistance', 'totalDuration', 'sessionCount', 'progress', 'goal', 'label');
     }
+
 
 }
