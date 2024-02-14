@@ -12,6 +12,34 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet"/>
 
+    <style>
+        /* public/css/app.css */
+        .advanced-bg-green {
+            background-color: #DCFCE7; /* Exemple de vert clair personnalisé */
+        }
+
+        .advanced-text-green {
+            color: #166534; /* Exemple de vert foncé pour le texte */
+        }
+
+        .advanced-bg-red {
+            background-color: #FEE2E2; /* Exemple de rouge clair personnalisé */
+        }
+
+        .advanced-text-red {
+            color: #991B1B; /* Exemple de rouge foncé pour le texte */
+        }
+
+        .advanced-bg-blue {
+            background-color: #DBEAFE; /* Exemple de bleu clair personnalisé */
+        }
+
+        .advanced-text-blue {
+            color: #1E40AF; /* Exemple de bleu foncé pour le texte */
+        }
+
+    </style>
+
 </head>
 <body class="antialiased bg-gray-300 p-4">
 

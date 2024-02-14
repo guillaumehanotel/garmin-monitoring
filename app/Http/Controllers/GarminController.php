@@ -156,17 +156,17 @@ class GarminController
         $sessionsDelta = $completedSessions - $expectedSessions;
 
         if ($sessionsDelta > 0) {
-            $backgroundColorClass = 'bg-green-100';
             $message = abs($sessionsDelta) . ' ' . (abs($sessionsDelta) === 1 ? 'séance' : 'Sorties') . ' d\'avance';
-            $textColorClass = 'text-green-800';
+            $backgroundColorClass = 'advanced-bg-green';
+            $textColorClass = 'advanced-text-green';
         } elseif ($sessionsDelta < 0) {
-            $backgroundColorClass = 'bg-red-100';
             $message = abs($sessionsDelta) . ' ' . (abs($sessionsDelta) === 1 ? 'séance' : 'Sorties') . ' de retard';
-            $textColorClass = 'text-red-800';
+            $backgroundColorClass = 'advanced-bg-red';
+            $textColorClass = 'advanced-text-red';
         } else {
-            $backgroundColorClass = 'bg-blue-100';
             $message = 'À jour';
-            $textColorClass = 'text-blue-800';
+            $backgroundColorClass = 'advanced-bg-blue';
+            $textColorClass = 'advanced-text-blue';
         }
 
         return [
