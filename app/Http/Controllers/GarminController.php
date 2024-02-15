@@ -33,6 +33,7 @@ class GarminController
             'today' => now(),
             'year' => now()->year,
             'startOfWeek' => now()->startOfWeek(),
+            'endOfWeek' => now()->endOfWeek(),
             'startOfMonth' => now()->startOfMonth(),
             'endOfMonth' => now()->endOfMonth(),
             'startOfYear' => now()->startOfYear(),
@@ -230,7 +231,7 @@ class GarminController
             Period::YEAR => $this->dates['startOfYear'],
         };
 
-        $endDate = $this->dates['today'];
+        $endDate = ($this->dates['today'])->addHour();
 
         $activities = RunningActivity::whereBetween('start_time_local', [$startDate, $endDate])->get();
 
