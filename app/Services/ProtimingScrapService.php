@@ -48,7 +48,6 @@ class ProtimingScrapService
 
             for ($i = 1; $i <= $nbPages; $i++) {
                 $pageUrl = $race->url . "/page:$i";
-//                $this->scrapRaceResults($race->id, $race->type, $pageUrl);
                 ScrapeRaceResultsJob::dispatch($race->id, $race->type, $pageUrl);
             }
         }

@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Period;
+use App\Models\RaceRunner;
+use App\Models\Runner;
 use App\Models\RunningActivity;
 use App\Services\EventService;
 use App\Services\GarminService;
 use App\Services\ProtimingScrapService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class GarminController
@@ -48,8 +51,11 @@ class GarminController
 
     public function index()
     {
-//        $this->protimingScrapService->scrapAndSaveRaces();
-//        $this->protimingScrapService->scrapAndSaveRunnerRaces();
+        if (!Cache::has('scrapped')) {
+            $this->protimingScrapService->scrapAndSaveRaces();
+            $this->protimingScrapService->scrapAndSaveRunnerRaces();
+            Cache::forever('scrapped', true);
+        }
 
         // Choper les races avec leurs nombres de résultats
         $newActivities = $this->garminService->saveRunningActivities();
@@ -75,6 +81,82 @@ class GarminController
             'stats' => $stats,
             'sessionsDeltaDetails' => $sessionsDeltaDetails,
             'calendarMonths' => $currentCalendar,
+        ]);
+    }
+
+    public function runnerByProgress()
+    {
+        $runners = Runner::select('runners.id', 'runners.name', 'runners.club')
+            ->whereHas('races', function ($query) {
+                $query->where('type', '10km');
+            }, '>=', 2)
+            ->with(['raceRunners.race' => function ($query) {
+                // Précharger les courses de type '10km' avec la date et le type
+                $query->where('type', '10km')->select('id', 'type', 'date');
+            }, 'raceRunners' => function ($query) {
+                // Précharger les résultats des courses, incluant l'ID de la course, le temps officiel, et l'ID du coureur
+                $query->whereHas('race', function ($query) {
+                    $query->where('type', '10km');
+                })->select('race_runners.race_id', 'race_runners.official_time', 'race_runners.runner_id');
+            }])
+            ->get()
+            ->map(function ($runner) {
+                // Construire le tableau de temps avec la date de la course comme clé
+                $times = [];
+                foreach ($runner->raceRunners as $raceRunner) {
+                    if ($race = $raceRunner->race) {
+                        $times[$race->date] = $raceRunner->official_time;
+                        //         "2023-11-05" => "00:32:00"
+                    }
+                }
+
+                return [
+                    'runner_id' => $runner->id,
+                    'name' => $runner->name,
+                    'club' => $runner->club,
+                    'times' => $times
+                ];
+            });
+
+
+        $runners = $runners->map(function ($runner) {
+            // Trier les temps par date
+            $dates = array_keys($runner['times']);
+            sort($dates);
+
+            // Initialiser la progression à null pour gérer les cas où il n'y aurait pas suffisamment de données
+            $runner['progression'] = null;
+
+            if (count($dates) >= 2) {
+                // Assurer que nous avons au moins deux courses pour calculer une progression
+
+                // Récupérer le temps de la première et de la dernière course
+                $firstRaceDate = $dates[0];
+                $lastRaceDate = end($dates);
+
+                $firstRaceTime = new Carbon($runner['times'][$firstRaceDate]);
+                $lastRaceTime = new Carbon($runner['times'][$lastRaceDate]);
+
+                // Calculer la différence en secondes
+                $progression = $lastRaceTime->diffInSeconds($firstRaceTime, false);
+
+                // Ajouter la progression à la structure de données du coureur
+                $runner['progression'] = $progression;
+                // progression au format "00:32:00"
+                $runner['progression_human'] =  $lastRaceTime->diff($firstRaceTime)->format('%H:%I:%S');
+            }
+
+            return $runner;
+        });
+
+        // Trier les coureurs par leur progression de manière décroissante
+        $sortedRunners = $runners->sortByDesc('progression');
+
+//        dd($sortedRunners
+//            ->take(100)
+//        );
+        return view('progression', [
+            'runners' => $sortedRunners
         ]);
     }
 
@@ -149,6 +231,7 @@ class GarminController
     }
 
 
+
     private function getSessionDeltaDetails(int $completedSessions): array
     {
         // Nombre de séances attendues depuis le début de l'année
@@ -180,11 +263,11 @@ class GarminController
 
     private function countSpecificDaysInPeriod(Period $period): int
     {
-        $start = match($period) {
+        $start = match ($period) {
             Period::MONTH => $this->dates['startOfMonth'],
             Period::YEAR => $this->dates['startOfYear'],
         };
-        $end = match($period) {
+        $end = match ($period) {
             Period::MONTH => $this->dates['endOfMonth'],
             Period::YEAR => $this->dates['endOfYear'],
         };
@@ -225,7 +308,7 @@ class GarminController
 
     private function calculateStatsByPeriod(Period $period): array
     {
-        $startDate = match($period) {
+        $startDate = match ($period) {
             Period::WEEK => $this->dates['startOfWeek'],
             Period::MONTH => $this->dates['startOfMonth'],
             Period::YEAR => $this->dates['startOfYear'],
@@ -244,7 +327,7 @@ class GarminController
 
         $year = $this->dates['year'];
 
-        $label = match($period) {
+        $label = match ($period) {
             Period::WEEK => Str::ucfirst("semaine n°" . $this->dates['today']->format('W')),
             Period::MONTH => Str::ucfirst($this->dates['today']->translatedFormat('F')) . ' ' . $year,
             Period::YEAR => $year,

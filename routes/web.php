@@ -16,3 +16,5 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [GarminController::class, 'index'])->name('garmin.index');
 Route::get('/refresh', [GarminController::class, 'refresh'])->name('garmin.refresh');
+
+Route::get('/resultats-progression', [GarminController::class, 'runnerByProgress'])->name('garmin.runnerByProgress');
