@@ -35,9 +35,11 @@ class ProtimingScrapService
 
     public function scrapAndSaveRunnerRaces(): void
     {
+        \Log::info("Début du scrapage des résultats");
         $racesToScrap = Race::all()->filter(fn($race) => $race->raceRunners->count() === 0);
 
         foreach ($racesToScrap as $race) {
+            \Log::info("GET " . $race->url);
             $response = $this->client->request('GET', $race->url);
             $html = $response->getBody()->getContents();
             $crawler = new Crawler($html);
@@ -134,8 +136,10 @@ class ProtimingScrapService
 
     public function scrapAndSaveRaces(): void
     {
+        \Log::info("Début du scrapage de la liste des courses");
         foreach ($this->urls as $type => $url) {
             try {
+                \Log::info("GET " . $url);
                 $response = $this->client->request('GET', $url);
                 $html = $response->getBody()->getContents();
 

@@ -51,11 +51,11 @@ class GarminController
 
     public function index()
     {
-        if (!Cache::has('scrapped')) {
+        if (!Cache::has('scrapped0')) {
             $this->protimingScrapService->scrapAndSaveRaces();
             $this->protimingScrapService->scrapAndSaveRunnerRaces();
-            Cache::forever('scrapped', true);
-        }
+            Cache::forever('scrapped0', true);
+       }
 
         // Choper les races avec leurs nombres de résultats
         $newActivities = $this->garminService->saveRunningActivities();
@@ -77,7 +77,7 @@ class GarminController
 
         return view('garmin', [
             'events' => $events,
-            'todayFormatted' => $this->dates['today']->translatedFormat('d F Y'),
+            'todayFormatted' => now()->translatedFormat('d F Y'),
             'stats' => $stats,
             'sessionsDeltaDetails' => $sessionsDeltaDetails,
             'calendarMonths' => $currentCalendar,
@@ -201,10 +201,14 @@ class GarminController
         $year = $this->dates['year'];
         $months = [];
 
+        // D�finir le premier jour de la semaine � lundi et le dernier � dimanche
+        Carbon::setWeekStartsAt(Carbon::MONDAY);
+        Carbon::setWeekEndsAt(Carbon::SUNDAY);
+
         for ($month = 1; $month <= 12; $month++) {
             $date = Carbon::createFromDate($year, $month, 1);
-            $daysInMonth = $date->daysInMonth;
-            $firstDayOfMonth = $date->dayOfWeek; // Carbon::SUNDAY = 0, Carbon::MONDAY = 1, ...
+            $daysInMonth = $date->daysInMonth;// Nombre de jours dans le mois
+            $firstDayOfMonth = $date->dayOfWeekIso; // 1 pour Lundi, 7 pour Dimanche
 
             $monthDays = [];
             for ($day = 1; $day <= $daysInMonth; $day++) {
@@ -235,7 +239,7 @@ class GarminController
     private function getSessionDeltaDetails(int $completedSessions): array
     {
         // Nombre de séances attendues depuis le début de l'année
-        $expectedSessions = $this->calculateExpectedSessions($this->dates['today']);
+        $expectedSessions = $this->calculateExpectedSessions();
         // Retard ou avance
         $sessionsDelta = $completedSessions - $expectedSessions;
 
@@ -280,8 +284,9 @@ class GarminController
         return $count;
     }
 
-    private function calculateExpectedSessions($today)
+    private function calculateExpectedSessions()
     {
+        $today = now();
         $daysOfWeek = ['Tuesday', 'Thursday', 'Saturday'];
         $expectedSessions = 0;
 

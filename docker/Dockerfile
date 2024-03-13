@@ -1,4 +1,4 @@
-FROM guillaumehanotel/php:8.2-dev-latest
+FROM guillaumehanotel/php:8.2-arm64-dev-latest
 
 ARG user
 ARG uid

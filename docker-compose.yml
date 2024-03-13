@@ -104,7 +104,7 @@ services:
         networks:
             - garmin_laravel
     phpmyadmin:
-        image: phpmyadmin/phpmyadmin
+        image: arm64v8/phpmyadmin
         container_name: garmin_phpmyadmin
         environment:
             MYSQL_ROOT_PASSWORD: secret
